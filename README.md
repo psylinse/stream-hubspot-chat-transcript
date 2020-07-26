@@ -1,6 +1,6 @@
 # Save a Chat Widget Transcript to a Hubspot CRM Contact Using Webhooks
 
-This tutorial will explore how to make a chat widget that connects to the Hubspot CRM to (1) create or update a Hubspot CRM Contact with the user’s info, and (2) save chat logs in HubSpot. We’ll use the versatile [Stream Chat](https://getstream.io/chat/) client and its webhooks to accomplish this. The steps provided here will help you learn how to leverage webhooks to interact with your HubSpot CRM, based on any events within your chat widget. 
+This tutorial will explore how to make a chat widget that connects to the HubSpot CRM to (1) create or update a HubSpot CRM Contact with the user’s info, and (2) save chat logs in HubSpot. We’ll use the versatile [Stream Chat](https://getstream.io/chat/) client and its webhooks to accomplish this. The steps provided here will help you learn how to leverage webhooks to interact with your HubSpot CRM, based on any events within your chat widget. 
 
 ### Overview:
 
