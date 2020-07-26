@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Chat, Channel, ChannelHeader, MessageInput, MessageList, Thread, Window, } from 'stream-chat-react';
 import { StreamChat } from 'stream-chat';
-import './App.css';
 import 'stream-chat-react/dist/css/index.css'
 
 function App() {
@@ -14,9 +13,9 @@ function App() {
 
   const register = async (e) => {
     try {
-
       e.preventDefault();
-      var response = await fetch('http://localhost:8080/registrations', {
+
+      const response = await fetch('http://localhost:8080/registrations', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -28,6 +27,7 @@ function App() {
           email,
         }),
       });
+
       const { customerId, customerToken, channelId, apiKey } = await response.json();
       const chatClient = new StreamChat(apiKey);
 
@@ -37,13 +37,13 @@ function App() {
           name: firstName,
         },
         customerToken,
-      )
+      );
+
       const channel = chatClient.channel('messaging', channelId);
       setChatClient(chatClient);
-      setChannel(channel)
-
+      setChannel(channel);
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
   };
 
@@ -90,7 +90,7 @@ function App() {
             placeholder="email"
             required
           />
-          <button className="btn btn-block" type="submit">
+          <button type="submit">
             Start chat
           </button>
         </form>
