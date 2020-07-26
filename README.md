@@ -1,17 +1,17 @@
 # Save a Chat Widget Transcript to a Hubspot CRM Contact Using Webhooks
 
-This tutorial will explore how to make a chat widget that connects to the Hubspot CRM to (1) create or update a Hubspot CRM Contact with the user’s info, and (2) save chat logs in Hubspot. We’ll use the versatile [Stream Chat](https://getstream.io/chat/) client and its webhooks to accomplish this. The steps provided here will help you learn how to leverage webhooks to interact with your Hubspot CRM, based on any events within your chat widget. 
+This tutorial will explore how to make a chat widget that connects to the Hubspot CRM to (1) create or update a Hubspot CRM Contact with the user’s info, and (2) save chat logs in HubSpot. We’ll use the versatile [Stream Chat](https://getstream.io/chat/) client and its webhooks to accomplish this. The steps provided here will help you learn how to leverage webhooks to interact with your HubSpot CRM, based on any events within your chat widget. 
 
 ### Overview:
 
 - Open a free Stream account and configure an API key
-- Configure a Hubspot CRM account to connect to the Hubspot API
+- Configure a HubSpot CRM account to connect to the HubSpot API
 - Build a backend that
-	1. Creates or updates the user’s info to a Hubspot CRM Contact
-	2. Starts a chat widget using Stream
-	3. Opens a private chat channel for the user and a support representative
-	4. Sends data back to the frontend for the user to join the chat channel
-	5. Logs all messages in the chat channel to the Hubspot CRM using web hooks
+   1. Creates or updates the user’s info to a HubSpot CRM Contact
+   2. Starts a chat widget using Stream
+   3. Opens a private chat channel for the user and a support representative
+   4. Sends data back to the frontend for the user to join the chat channel
+   5. Logs all messages in the chat channel to the HubSpot CRM using webhooks
 
 The code for this app can be found in the [Git Repo here](https://github.com/psylinse/stream-hubspot-chat-transcript)
 
@@ -19,10 +19,10 @@ The code for this app can be found in the [Git Repo here](https://github.com/psy
 
 - Learn how to use webhooks
 - Build a support/sales style chat widget
-- Create Hubspot contacts and message logs based on your chat widget
-- Create Hubspot and Stream accounts and get API Keys
+- Create HubSpot contacts and message logs based on your chat widget
+- Create HubSpot and Stream accounts and get API Keys
 - Set up a frontend/backend Stream Chat app
-- Create a Chat Widget that automatically saves the chat log in Hubspot CRM (using Stream Chat's webhook)
+- Create a Chat Widget that automatically saves the chat log in HubSpot CRM (using Stream Chat's webhook)
 - Set up a private, Frontend/Backend Stream Chat
 
 These topics will be covered using Express JS and React, but the methodologies can be ported to most languages.
@@ -32,7 +32,7 @@ These topics will be covered using Express JS and React, but the methodologies c
 - This tutorial focuses on the mechanics of setting up the backend of a chat widget to connect to and update HubSpot. Specifics on creating the React frontend will not be the priority.
 - The GitHub repo for this project includes a fully functional registration form and frontend Stream chat, but not every aspect will be covered in depth.
 
-## Step 1: Account set ups
+## Step 1: Account set up
 
 To get up and running, perform the following steps:
 
@@ -80,7 +80,7 @@ To get up and running, perform the following steps:
 
 <script src="https://gist.github.com/isaidspaghetti/78ab29744d5c3d93d735a1a81d1b83e0.js"></script>
 
-Your HubSpot Account can now be accessed through this API key.
+Your HubSpot account can now be accessed through this API key.
 
 ### Create a custom HubSpot property for a chat transcript
 
@@ -109,16 +109,16 @@ To save the chat transcript, we will use a custom property field in HubSpot. Her
 NODE_ENV=development
 PORT=8080
 
-STREAM_API_KEY= your stream api key here
-STREAM_API_SECRET= your stream api secret here
-HUBSPOT_API_KEY=your hubspot api key here
+STREAM_API_KEY= your stream API key here
+STREAM_API_SECRET= your stream API secret here
+HUBSPOT_API_KEY=your HubSpot API key here
 ```
 
 ## Step 2: Webhook Setup
 
-### What are web hooks?
+### What are webhooks?
 
-If you’re new to [webhooks](https://zapier.com/blog/what-are-webhooks/), here’s a quick explanation of how they work. Webhooks are like a push notifications between apps. Before webhooks, a backend service had to poll another in order to react to updates or changes. The concept of pushing events came along and the responsibility is inverted. Instead of polling, the consuming service simply waits to be notified of an event. A webhook is similar to a push notification that gets sent to your phone except for your backend services. Stream’s webhooks alert your app about anything that happens in any Stream Chat. This app uses Stream’s webhooks to push new messages to our backend, and our backend can react to those messages. 
+If you’re new to [webhooks](https://zapier.com/blog/what-are-webhooks/), here’s a quick explanation of how they work. Webhooks are like push notifications between apps. Before webhooks, a backend service had to poll another to react to updates or changes. The concept of pushing events came along and the responsibility is inverted. Instead of polling, the consuming service simply waits to be notified of an event. A webhook is similar to a push notification that gets sent to your phone except for your backend services. Stream’s webhooks alert your app about anything that happens in any Stream Chat. This app uses Stream’s webhooks to push new messages to our backend, and our backend can react to those messages. 
 
 // todo@taylor: I like this idea, but it's not quite right, let's talk about this
 A webhook might look like this:
@@ -129,7 +129,7 @@ Where the first portion is the specific URL which will receive a POST from the w
 
 ### Setting up a Stream webhook
 
-Stream offers a lot of depth and versatility in its webhooks. To start using them, let's first tell the Stream know where to send a webhook. Stream’s webhooks require a publicly routable URL to communicate with. This project runs off a `localhost`, so we need to somehow make our local host address accessible. We’ll use [ngrok](https://gist.github.com/wosephjeber/aa174fb851dfe87e644e) to create a secure, temporarily public address for our backend. If you already have a public URL running, you can skip the `ngrok` steps and just set up an endpoint URL there.
+Stream offers a lot of depth and versatility in its webhooks. To start using them, let's first tell the Stream where to send webhook events. Stream’s webhooks require a publicly routable URL to communicate with. This project runs off a `localhost`, so we need to somehow make our localhost address accessible. We’ll use [ngrok](https://gist.github.com/wosephjeber/aa174fb851dfe87e644e) to create a secure, temporarily public address for our backend. If you already have a public URL running, you can skip the `ngrok` steps and just set up an endpoint URL there.
 
 #### Quick detour: How ngrok works
 
@@ -146,14 +146,14 @@ A very brief overview of how the ngrok app works:
 ### ngrok setup
 
 1. [Register for a free ngrok account](https://dashboard.ngrok.com/get-started/setup) and download the software.
-	*if you prefer to use Homebrew to install ngrok, use the following terminal command: `Brew cask install ngrok`.
+   *if you prefer to use Homebrew to install ngrok, use the following terminal command: `Brew cask install ngrok`.
 2. Once installed, connect your account using the authtoken provided by ngrok at the [same link as above](https://dashboard.ngrok.com/get-started/setup). Just run `ngrok authtoken your_token_goes_here` in the terminal. 
 3. To start ngrok, use the terminal command: `ngrok http 8080`: which tells ngrok to serve publicly whatever you are serving locally at http://localhost:8080.   
-4. The terminal opens the ngrok app (screenshot below), and shows the public URLs. 
+4. The terminal opens the ngrok app (screenshot below) and shows the public URLs. 
 
 ![](images/ngrok-terminal.png)
 
-Now, whatever is hosted at `localhost:8080` can receive http requests at this URL. (The URL boxed in red is the publicly available URL).
+Now, whatever is hosted at `localhost:8080` can receive HTTP requests at this URL. (The URL boxed in red is the publicly available URL).
 
 ### Create a backend webhook handler
 
@@ -172,7 +172,7 @@ api.use('/webhooks', webHookRouter)
 
 The code snippets above tell Express to use the file `backend/routes/index.js` anytime an HTTP request is made to the route `/webhooks`. Next, we need to let Stream know about this webhook URL.
 
-### Configure your public webook URL in Stream
+### Configure your public webhook URL in Stream
 
 Use the following steps to register your ngrok (or other public URL) with the Stream API:
 
@@ -188,11 +188,11 @@ Use the following steps to register your ngrok (or other public URL) with the St
 
 ![](images/stream-app-type.png)
 
-4. Scroll down to the `Chat Events` box. Select the following options: `Webhook: active`, `Disable Auth Checks`, and `Disable Permissions Checks`. (Note that these options are important to consider using if using this app in a production environment). Then, add your public url and `/webhooks` to the webhook URL textbox. Save your settings.
+4. Scroll down to the `Chat Events` box. Select the following options: `Webhook: active`, `Disable Auth Checks`, and `Disable Permissions Checks`. (Note that these options are important to consider using if using this app in a production environment). Then, add your public URL and `/webhooks` to the webhook URL textbox. Save your settings.
 
 ![](images/stream-app-webhooks.png)
 
-The Stream API will now send a `POST` to that URL in anytime an event takes places in your Stream App, with details about the event. The next step is to accept that webhook in our app's backend.
+The Stream API will now send a `POST` to that URL anytime an event takes place in your Stream App, with details about the event. The next step is to accept that webhook in our app's backend.
 
 ## Registration endpoint
 
@@ -292,7 +292,7 @@ Take note that the API will check for an existing customer with the email addres
 
 ### Registration: Create a client and users
 
-Once the contact is created, we instantiate a Stream client by passing our unique Stream API Key and Stream Secret. 
+Once the contact is created, we instantiate a Stream client bypassing our unique Stream API Key and Stream Secret. 
 
 ```javascript
 //backend/routes/index.js:47
@@ -301,7 +301,7 @@ const client = new StreamChat(apiKey, apiSecret);
 
 To allow our chat users to join, they will first need to be registered with Stream. For this app, only the frontend user and a customer support user are required.
 
-The `createUsers` method creates the users in Stream, with optional properties to control each user's permissions. The method accepts the user inputs to create the `customer` object, and creates a generic `supporter` user to represent a technical or sales representative on the other end of the chat. 
+The `createUsers` method creates the users in Stream, with optional properties to control each user's permissions. The method accepts the user inputs to create the `customer` object and creates a generic `supporter` user to represent a technical or sales representative on the other end of the chat. 
 
 ```javascript
 //backend/routes/index.js:24
@@ -344,7 +344,7 @@ const channel = client.channel('messaging', hubspotCustomerId, {
     });
 ```
 
-There are a number of different [channel types](https://getstream.io/chat/docs/channel_features/?language=js), which are customizable. For this session we'll just use `'messaging'`. The `id` field  is important, as our webhook will use it later. The third argument commands that only users with Stream id's matching `customer.id` or `supporter.id` will be allowed to enter this channel.
+There are several different [channel types](https://getstream.io/chat/docs/channel_features/?language=js), which are customizable. For this session, we'll just use `'messaging'`. The `id` field is important, as our webhook will use it later. The third argument commands that only users with Stream id's matching `customer.id` or `supporter.id` will be allowed to enter this channel.
 
 ### Registration: Respond to the frontend
 
@@ -355,7 +355,7 @@ Last, but not least: we create a `customerToken` and respond to the frontend of 
 const customerToken = client.createToken(customer.id);
 ```
 
-The frontend then follows a similar process as the backend, but is out of the scope of this post. To learn more check out [this example](https://github.com/nparsons08/stream-hubspot-contacts).
+The frontend then follows a similar process as the backend but is out of the scope of this post. To learn more check out [this example](https://github.com/nparsons08/stream-hubspot-contacts).
 
 ## Webhook handler
 
@@ -415,16 +415,16 @@ router.post('/webhooks', async (req, res, next) => {
 
 Let's break down the handler above. Stream's webhook pings this handler anytime an event occurs in our app. We only want to update `chat_transcript` when a new message is sent, so we add an `if` `then` to execute this function only when `message.new` is the webhook initiator. Stream offers over twenty [webhook initiators](https://getstream.io/chat/docs/webhook_events/?language=js). 
 
-HubSpot's API has plenty of [useful endpoints](https://developers.hubspot.com/docs/api/crm/contacts) as well. We just need to call two of them. The first call is to retrieve any existing chat transcript saved in HubSpot. We specify the exact contact we want to check by including the `hubspotCustomerId`, and ask for just their chat transcript using `chat_transcript` as a parameter. Note that custom contact properties in HubSpot are called using the Label Name shown in the HubSpot property editor window (see below). If you included spaces or dashes in your contact property, use an underscore when referencing it in your request body. 
+HubSpot's API has plenty of [useful endpoints](https://developers.hubspot.com/docs/api/crm/contacts) as well. We just need to call two of them. The first call is to retrieve any existing chat transcript saved in HubSpot. We specify the exact contact we want to check by including the `hubspotCustomerId` and ask for just their chat transcript using `chat_transcript` as a parameter. Note that custom contact properties in HubSpot are called using the Label Name shown in the HubSpot property editor window (see below). If you included spaces or dashes in your contact property, use an underscore when referencing it in your request body. 
 
 ![](images/hubspot-properties-label.png)
 
-The chat transcript can be customized with whatever properties are useful for your application. The string literal used in this example includes the `user.id`, `created_at` date, and message `text`, each of which are included in the Stream webhook request body. To see the available properties provided by the webhook, use `console.log(req.body)`.
+The chat transcript can be customized with whatever properties are useful for your application. The string literal used in this example includes the `user.id`, `created_at` date, and message `text`, each of which is included in the Stream webhook request body. To see the available properties provided by the webhook, use `console.log(req.body)`.
 
 The second `axios` request is sent to the HubSpot API's a contact update URL. The request specifies the property to be updated and what to update it with. Multiple properties can be updated at once if desired. 
 
-Line 108 is not necessary for the code to run, but ensures that our connection with the HubSpot API will be closed when our task is done. Some API's might flag your app for repeatedly leaving requests open.
+Line 108 is not necessary for the code to run, but ensures that our connection with the HubSpot API will be closed when our task is done. Some APIs might flag your app for repeatedly leaving requests open.
 
 ## Closing thoughts
 
-What may sound like a daunting task can actually be done quite artfully when using the right tools for the job. In this case, the right tools are a chat app with webhooks (Stream), and a tactful use of HubSpot API endpoints. Hopefully this post has inspired you creatively and equipped you with skills to make your app tasks easier.
+What may sound like a daunting task can be done quite artfully when using the right tools for the job. In this case, the right tools are a chat app with webhooks (Stream), and tactful use of HubSpot API endpoints. Hopefully, this post has inspired you creatively and equipped you with skills to make your app tasks easier.
