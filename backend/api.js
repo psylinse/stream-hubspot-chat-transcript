@@ -5,9 +5,10 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
-const indexRouter = require('./routes/index');
+require('dotenv').config();
+
 const api = express();
-const webHookRouter = require('./routes/index')
+const indexRouter = require('./routes/index')
 
 api.use(cors());
 api.use(logger('dev'));
@@ -17,7 +18,6 @@ api.use(cookieParser());
 api.use(express.static(path.join(__dirname, 'public')));
 
 api.use('/', indexRouter);
-api.use('/webhooks', webHookRouter)
 
 // catch 404 and forward to error handler
 api.use(function (req, res, next) {

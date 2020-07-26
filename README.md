@@ -13,7 +13,7 @@ This tutorial will explore how to make a chat widget that connects to the Hubspo
 	4. Sends data back to the frontend for the user to join the chat channel
 	5. Logs all messages in the chat channel to the Hubspot CRM using web hooks
 
-The code for this app can be found in the [Git Repo here](https://github.com/isaidspaghetti/stream-hubspot-chat-transcript
+The code for this app can be found in the [Git Repo here](https://github.com/psylinse/stream-hubspot-chat-transcript)
 
 ### Read this tutorial if you want to...
 
@@ -22,30 +22,29 @@ The code for this app can be found in the [Git Repo here](https://github.com/isa
 - Create Hubspot contacts and message logs based on your chat widget
 - Create Hubspot and Stream accounts and get API Keys
 - Set up a frontend/backend Stream Chat app
-- Create a Chat Widget that automatically saves the chat log in Hubspot CRM (using Stream Chat)
+- Create a Chat Widget that automatically saves the chat log in Hubspot CRM (using Stream Chat's webhook)
 - Set up a private, Frontend/Backend Stream Chat
 
 These topics will be covered using Express JS and React, but the methodologies can be ported to most languages.
 
 ### What's not covered
 
-- This tutorial focuses on the mechanics of setting up the backend of a chat widget to connect to and update HubSpot. Specifics on creating the React frontend will not be the priority. [help with this](link)
-- How to use the [dotenv library](link)
+- This tutorial focuses on the mechanics of setting up the backend of a chat widget to connect to and update HubSpot. Specifics on creating the React frontend will not be the priority.
 - The GitHub repo for this project includes a fully functional registration form and frontend Stream chat, but not every aspect will be covered in depth.
 
-## STEP 1: Account set ups
+## Step 1: Account set ups
 
-To get up and running right off the bat, perform the following (instructions below):
+To get up and running, perform the following steps:
 
 * Clone the [git repo](https://github.com/isaidspaghetti/stream-hubspot-chat-transcript)
-* Set up a free Stream Account, configure an API Key and Secret
-* Configure your HubSpot API Key
+* Set up a free Stream Account and configure an API Key and Secret
+* Set up HubSpot and configure your HubSpot API Key
 * Set `chat_transcript` as a custom contact property field in HubSpot
 * Add your unique keys to a `.env` file
 
 ### Set-up your Stream account
 
-1. Sign up for a [Stream Trial](https://getstream.io/get_started/?signup=#flat_feed).
+1. Sign up for a [Stream Trial](https://getstream.io/get_started).
 
 1. Then to generate a Stream API Key and API Secret, navigate to your [Stream.io Dashboard](https://getstream.io/dashboard/). 
 
@@ -59,7 +58,7 @@ To get up and running right off the bat, perform the following (instructions bel
  
 ![](images/stream-create-new-app-button.png)
 
-4. Stream will generate a Key and Secret for your app. You need to copy these into your `.env` file as well.
+4. Stream will generate a Key and Secret for your app. You need to copy these into your `.env` file.
  
 ![](images/stream-key-secret-copy.png)
 
@@ -67,9 +66,9 @@ To get up and running right off the bat, perform the following (instructions bel
 
 ### Set-up your HubSpot account
 
-1. Create your account at [Hubspot](https://app.hubspot.com/signup/crm/step/user-info?hubs_signup-cta=getstarted-crm&hubs_signup-url=www.hubspot.com%2Fproducts%2Fget-started) and complete the registration form.
+1. Create your account at [HubSpot](https://app.hubspot.com/signup/crm/step/user-info?hubs_signup-cta=getstarted-crm&hubs_signup-url=www.hubspot.com%2Fproducts%2Fget-started) and complete the registration form.
 
-2. Once you are logged into the `Hubspot Dashboard,` go to Settings in the upper-right corner
+2. Once you are logged into the `HubSpot Dashboard,` go to Settings in the upper-right corner
 
 ![](images/hubspot-navbar.png)
 
@@ -81,7 +80,7 @@ To get up and running right off the bat, perform the following (instructions bel
 
 <script src="https://gist.github.com/isaidspaghetti/78ab29744d5c3d93d735a1a81d1b83e0.js"></script>
 
-Your Hubspot Account can now be accessed through this API key.
+Your HubSpot Account can now be accessed through this API key.
 
 ### Create a custom HubSpot property for a chat transcript
 
@@ -101,7 +100,9 @@ To save the chat transcript, we will use a custom property field in HubSpot. Her
 
 ### Set your local environment variables
 
-1. Add your API keys and secret to the file titled `.env.example`
+1. Copy the file `.env.example` to `.env`. 
+
+1. Add your API keys and secret to `.env`.
 
 ```text
 //backend/.env
@@ -113,49 +114,46 @@ STREAM_API_SECRET= your stream api secret here
 HUBSPOT_API_KEY=your hubspot api key here
 ```
 
-2. Rename the file `.env.example` to `.env`
-
-## STEP 2: Webhook Setup
+## Step 2: Webhook Setup
 
 ### What are web hooks?
 
-If you’re new to [webhooks](https://zapier.com/blog/what-are-webhooks/), here’s a quick explanation of how they work. Webhooks are like a push email notifications between apps. In the days of AOL 6.0 et al., you had to log in to see if you had any new emails. Push notifications came long and we got the luxury of receiving an alert whenever we received a new email. A webhook is like the alert that gets sent to your phone to let you know something happened at your email address. Stream’s WebHooks can alert your app about anything that happens in any Stream Chat. This app uses Stream’s webhooks to ‘push’ new messages to our backend, and our backend can then send those messages to the Hubspot CRM API. 
+If you’re new to [webhooks](https://zapier.com/blog/what-are-webhooks/), here’s a quick explanation of how they work. Webhooks are like a push notifications between apps. Before webhooks, a backend service had to poll another in order to react to updates or changes. The concept of pushing events came along and the responsibility is inverted. Instead of polling, the consuming service simply waits to be notified of an event. A webhook is similar to a push notification that gets sent to your phone except for your backend services. Stream’s webhooks alert your app about anything that happens in any Stream Chat. This app uses Stream’s webhooks to push new messages to our backend, and our backend can react to those messages. 
 
-A Webhook might look like this:
+// todo@taylor: I like this idea, but it's not quite right, let's talk about this
+A webhook might look like this:
 
-![] (images/webhook-example.png)
+![](images/webhook-example.png)
 
 Where the first portion is the specific URL which will receive a POST from the webhook, and the information after the `?` is the payload
 
 ### Setting up a Stream webhook
 
-Stream offers a lot of depth and versatility from its webhooks. To start using them, let's first tell the Stream know where to send a webhook. Stream’s webhooks  require a publicly routable URL to communicate with (a common trait for many applications). This project runs off a local host, so we need to somehow make our local host address accessible. We’ll use the [Ngrok App](https://gist.github.com/wosephjeber/aa174fb851dfe87e644e) (free for the needs of this app) to create a secure, temporarily public address for our backend. If you already have a public URL running, you can skip the Ngrok steps and just set up an endpoint URL there.
+Stream offers a lot of depth and versatility in its webhooks. To start using them, let's first tell the Stream know where to send a webhook. Stream’s webhooks require a publicly routable URL to communicate with. This project runs off a `localhost`, so we need to somehow make our local host address accessible. We’ll use [ngrok](https://gist.github.com/wosephjeber/aa174fb851dfe87e644e) to create a secure, temporarily public address for our backend. If you already have a public URL running, you can skip the `ngrok` steps and just set up an endpoint URL there.
 
-#### Quick detour: How Ngrok works
+#### Quick detour: How ngrok works
 
-A very brief overview of how the Ngrok app works:
+A very brief overview of how the ngrok app works:
 
-1. Ngrok  sets up a random, public URL on its servers. This URL can receive HTTP requests (eg: webhooks).
-2. Ngrok opens an SSH connection with your local machine.
-3. Requests to the Ngrok public URL get translated into an SSH command that is sent to your machine.
+1. ngrok sets up a random, public URL on its servers. This URL can receive HTTP requests (eg: webhooks).
+2. ngrok opens an SSH connection with your local machine.
+3. Requests to the ngrok public URL get proxied through an SSH tunnel to your local machine.
 4. Run your backend as you normally would, through any port (eg: localhost:8080).
-5. Ngrok recieves the SSH request, translates it back to an http request, and sends it to your app at port 8080.
+5. ngrok receives the SSH request, translates it back to a local HTTP request, and sends it to your app a the specified port.
 6. The local app runs as it normally would, sending a response to port 8080.
-7. Ngrok receives responses from your app, and sends the responses back to the Ngrok server via SSH
+7. ngrok receives responses from your app, and sends the responses back to the ngrok server via SSH
 
-In the end, your IP address is never made public, and you can test out your webhooks without going through production deployment. 
-
-### Ngrok setup
+### ngrok setup
 
 1. [Register for a free ngrok account](https://dashboard.ngrok.com/get-started/setup) and download the software.
-	*if you prefer to use Homebrew to install Ngrok, use the following terminal command: `Brew cask install ngrok`.
+	*if you prefer to use Homebrew to install ngrok, use the following terminal command: `Brew cask install ngrok`.
 2. Once installed, connect your account using the authtoken provided by ngrok at the [same link as above](https://dashboard.ngrok.com/get-started/setup). Just run `ngrok authtoken your_token_goes_here` in the terminal. 
-3. To start ngrok, use the terminal command: `ngrok http 8080`: which tells ngrok to ‘serve’ whatever you are serving locally at http://localhost:8080.   
+3. To start ngrok, use the terminal command: `ngrok http 8080`: which tells ngrok to serve publicly whatever you are serving locally at http://localhost:8080.   
 4. The terminal opens the ngrok app (screenshot below), and shows the public URLs. 
 
 ![](images/ngrok-terminal.png)
 
-Now, whatever is hosted at localhost:8080 can receive http requests at this URL. (The URL boxed in red is the publically available URL).
+Now, whatever is hosted at `localhost:8080` can receive http requests at this URL. (The URL boxed in red is the publicly available URL).
 
 ### Create a backend webhook handler
 
@@ -172,13 +170,13 @@ And
 api.use('/webhooks', webHookRouter)
 ```
 
-The code snippets above tell Express to use the file `//backend/routes/index.js` anytime an HTTP request is made to the route `/webhooks`. Next, we need to let Stream know about this webhook URL.
+The code snippets above tell Express to use the file `backend/routes/index.js` anytime an HTTP request is made to the route `/webhooks`. Next, we need to let Stream know about this webhook URL.
 
 ### Configure your public webook URL in Stream
 
-Use the following steps to register your Ngrok (or other public URL) with the Stream API:
+Use the following steps to register your ngrok (or other public URL) with the Stream API:
 
-1. Navigate to [getstream.io](https://getstream.io/) and click the Dashboard button on the upper right:
+1. Navigate to [getstream.io](https://getstream.io/) and click the "Dashboard" button on the upper right:
 
 ![](images/stream-dashboard-button)
 
@@ -190,34 +188,33 @@ Use the following steps to register your Ngrok (or other public URL) with the St
 
 ![](images/stream-app-type.png)
 
-4. Scroll down to the `Chat Events` box. Select the following options: `Webhook: active`, `Disable Auth Checks`, and `Disable Permissions Checks`. (Note that these options are important to consider using if using this app in a production environment). Then, add your public ngrok url and `/webhooks` to the webhook URL textbox. Save your settings.
+4. Scroll down to the `Chat Events` box. Select the following options: `Webhook: active`, `Disable Auth Checks`, and `Disable Permissions Checks`. (Note that these options are important to consider using if using this app in a production environment). Then, add your public url and `/webhooks` to the webhook URL textbox. Save your settings.
 
 ![](images/stream-app-webhooks.png)
 
-The Stream API will now send a `POST` to the URL in the textbox anytime an event takes places in your Stream App, with details about the event. So the next step is to accept that webhook in our app's backend 
+The Stream API will now send a `POST` to that URL in anytime an event takes places in your Stream App, with details about the event. The next step is to accept that webhook in our app's backend.
 
 ## Registration endpoint
 
+Before we can handle a user's chat event, we need to register them in both Stream and HubSpot.
+
 ### Initialization 
 
-The backend file `backend/routes/index.js` is the core of the backend of this app. Let's take a peek at how this file is initiated:
+The backend file `backend/routes/index.js` is the core of this app. Let's take a peek at how this file is initiated:
 
 ```javascript
 //backend/routes/index.js:1
 const express = require('express');
 const router = express.Router();
-const StreamChat = require('stream-chat');
-const { default: Axios } = require('axios');
-require('dotenv').config();
+const { StreamChat } = require('stream-chat');
+const { default: axios } = require('axios');
 
 const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;
 const hubspotKey = process.env.HUBSPOT_API_KEY
 ```
 
-The `stream-chat` library is the all-in-one chat creator, which handles all the heavy lifting of for our chat portion of the app. `Axios` will be used to perform external HTTP requests to HubSpot. `dotenv` allows us to call our environment variables from the `.env` file, and keep their values hidden from a browser. 
-
-There will be several methods in this file that will utilize our access keys, so they are declared as globals early on.
+The `stream-chat` library is the all-in-one chat creator, which handles all the heavy lifting of for our chat portion of the app. `axios` will be used to perform external HTTP requests to HubSpot. 
 
 ### User registration: starting a chat
 
@@ -226,10 +223,10 @@ There will be several methods in this file that will utilize our access keys, so
 1. Accepting the user's frontend form input
 2. Creating a HubSpot customer entry
 3. Initializing a Stream chat client
-4. Registering the user and support admin with the client
-5. Opening a Stream chat channel
+4. Registering the user and support admin with Stream
+5. Creating a Stream chat channel
 
-Here's the primary registration endpoint, which will will be breaking down step by step.
+Here's the primary registration endpoint, which we will be breaking down step by step.
 
 ```javascript
 //backend/routes/index.js:39
@@ -271,7 +268,7 @@ router.post('/registrations', async (req, res, next) => {
 
 ### Registration: Create a contact in the HubSpot API
 
-First, the name inputs are normalized to replace spaces with '_', and the email is converted to lower case. These values will be stored in HubSpot, so having uniform styling makes it easier to call them when needed. Next, a separate method, `createHubspotContact()` is called to connect to the HubSpot API and create a new contact in the CRM.
+First, the name inputs are normalized by replacing spaces with '_', and the email is converted to lower case. These values will be stored in HubSpot, so having uniform styling makes it easier to call them when needed. Next, a separate method, `createHubspotContact()` is called to connect to the HubSpot API and create a new contact in the CRM.
 
 ```javascript
 //backend/routes/index.js:11
@@ -289,9 +286,9 @@ async function createHubspotContact(firstName, lastName, email) {
 }
 ```
 
-Axios is used to `POST` the frontend user's inputs to HubSpot's endpoint. The unique `hubspotKey` is passed to let HubSpot know (1) which account to add the contact to, and (2) that the request is legitimate. The properties passed can match any HubSpot contact property, including custom properties. This method returns HubSpot's unique contact id, which will be helpful later in our webhook. 
+Axios is used to `POST` the frontend user's inputs to HubSpot's endpoint. The secret `hubspotKey` is passed to let HubSpot know (1) which account to add the contact to, and (2) that the request is legitimate. The properties passed can match any HubSpot contact property, including custom properties. This method returns HubSpot's unique contact id, which will be helpful later in our webhook. 
 
-Take note that the API will check for an existing customer with the email address subitted, and will not overwrite existing users.
+Take note that the API will check for an existing customer with the email address submitted, and will not overwrite existing users.
 
 ### Registration: Create a client and users
 
@@ -299,12 +296,12 @@ Once the contact is created, we instantiate a Stream client by passing our uniqu
 
 ```javascript
 //backend/routes/index.js:47
-const client = new StreamChat.StreamChat(apiKey, apiSecret);
+const client = new StreamChat(apiKey, apiSecret);
 ```
 
-To allow our chat users to join, they will first need to be registered with the client. For this app, only the frontend user and an customer support user are required.
+To allow our chat users to join, they will first need to be registered with Stream. For this app, only the frontend user and a customer support user are required.
 
-The `createUsers` method creates an object for each user, with optional properties to control each user's permissions. The method accepts the user inputs to create the `customer` object, and creates a generic `supporter` user to represent a technical or sales representative on the other end of the chat. 
+The `createUsers` method creates the users in Stream, with optional properties to control each user's permissions. The method accepts the user inputs to create the `customer` object, and creates a generic `supporter` user to represent a technical or sales representative on the other end of the chat. 
 
 ```javascript
 //backend/routes/index.js:24
@@ -316,15 +313,15 @@ function createUsers(firstName, lastName) {
   };
 
   const supporter = {
-    id: 'adminId',
-    name: 'unique-admin-name',
+    id: 'admin-id',
+    name: 'Support Admin',
     role: 'admin'
   }
   return [customer, supporter]
 }
 ```
 
-There are simpler ways to create users in Stream, but this technique illustrates some of Stream's flexibility in doing so. User objects only require an `id`, but Stream offers a handfull of built-in [property options](https://getstream.io/chat/docs/init_and_users/?language=js), and accepts any custom property you want to make, as long as the total object size is under 5KB. 
+There are other ways to create users in Stream, but this technique illustrates some of Stream's flexibility in doing so. User objects only require an `id`, but Stream offers a handful of built-in [property options](https://getstream.io/chat/docs/init_and_users/?language=js), and accepts any custom property you want to make. 
 
 Back in the registration handler, the user objects are passed to `upsertUsers`, which registers the users with the client.
 
@@ -358,18 +355,18 @@ Last, but not least: we create a `customerToken` and respond to the frontend of 
 const customerToken = client.createToken(customer.id);
 ```
 
-The frontend then follows a similar process as the backend, but is out of the scope of this post. To learn more check out [this post](LINK TO PREVIOUS POST!!!!!!!!).
+The frontend then follows a similar process as the backend, but is out of the scope of this post. To learn more check out [this example](https://github.com/nparsons08/stream-hubspot-contacts).
 
 ## Webhook handler
 
 The `backend/routes/index.js` file also contains the `webhook` endpoint. Here is the process flow of this endpoint: 
 
-1. Recieve a request from the Stream webhook service.
+1. Receive a request from the Stream webhook service.
 2. If the webhook is initiated by a new message event (`new.message`), continue, otherwise do nothing.
 3. Store the message body and channel id from the webhook request.
-4. Use `Axios` to retrieve any existing chat transcript form the HubSpot.
+4. Use `axios` to retrieve any existing chat transcript from the HubSpot.
 5. Save a local version of the chat transcript, and append the new message
-6. Use `Axios` to update the custom `chat_transcript` HubSpot contact property
+6. Use `axios` to update the custom `chat_transcript` HubSpot contact property
 
 And here's the code:
 
@@ -424,10 +421,10 @@ HubSpot's API has plenty of [useful endpoints](https://developers.hubspot.com/do
 
 The chat transcript can be customized with whatever properties are useful for your application. The string literal used in this example includes the `user.id`, `created_at` date, and message `text`, each of which are included in the Stream webhook request body. To see the available properties provided by the webhook, use `console.log(req.body)`.
 
-The second `Axios` request is sent to the HubSpot API's a contact update URL. The request specifies the property to be updated and what to update it with. Multiple properties can be updated at once if desired. 
+The second `axios` request is sent to the HubSpot API's a contact update URL. The request specifies the property to be updated and what to update it with. Multiple properties can be updated at once if desired. 
 
 Line 108 is not necessary for the code to run, but ensures that our connection with the HubSpot API will be closed when our task is done. Some API's might flag your app for repeatedly leaving requests open.
 
 ## Closing thoughts
 
-What may sound like a daunting task can actually be done quite artfully when using the right tools for the job. In this case, the right tools are a chat app with generous webhooks (Stream), and a tactful use of HubSpot API endpoints. Hopefully this post has inspired you creatively and equipped you with skills to make your app tasks easier.
+What may sound like a daunting task can actually be done quite artfully when using the right tools for the job. In this case, the right tools are a chat app with webhooks (Stream), and a tactful use of HubSpot API endpoints. Hopefully this post has inspired you creatively and equipped you with skills to make your app tasks easier.
