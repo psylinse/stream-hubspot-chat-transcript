@@ -46,15 +46,15 @@ router.post('/registrations', async (req, res) => {
 
     const client = new StreamChat(apiKey, apiSecret);
 
-    [customer, supporter] = createUsers(firstName, lastName);
+    [customer, admin] = createUsers(firstName, lastName);
 
     await client.upsertUsers([
       customer,
-      supporter
+      admin
     ]);
 
     const channel = client.channel('messaging', hubspotCustomerId, {
-      members: [customer.id, supporter.id],
+      members: [customer.id, admin.id],
     });
 
     const customerToken = client.createToken(customer.id);
@@ -65,6 +65,7 @@ router.post('/registrations', async (req, res) => {
       channelId: channel.id,
       apiKey,
     });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -89,11 +90,11 @@ router.post('/webhooks', async (req, res) => {
       let updatedTranscript = `${localTranscript}\n FROM: ${newMessage.user.id}\n SENT AT: ${newMessage.created_at}\n MESSAGE: ${newMessage.text}`;
 
       await axios
-          .patch(`https://api.hubapi.com/crm/v3/objects/contacts/${hubspotCustomerId}?hapikey=${hubspotKey}`, {
-              properties: {
-                  'chat_transcript': updatedTranscript,
-              }
-          });
+        .patch(`https://api.hubapi.com/crm/v3/objects/contacts/${hubspotCustomerId}?hapikey=${hubspotKey}`, {
+          properties: {
+            'chat_transcript': updatedTranscript,
+          }
+        });
     } catch (err) {
       console.error('Webhook did not respond properly', err);
       res.status(200).end();
